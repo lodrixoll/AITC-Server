@@ -18,10 +18,10 @@ mongoose.connect(process.env.MONGODB_URI)
     process.exit(1);
   });
 
-
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/api', appRoutes); // Use the routes
+app.use('/api', appRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
