@@ -8,6 +8,7 @@ require('dotenv').config();
 
 // Register endpoint
 router.post('/register', async (req, res) => {
+    console.log("\n\n==== New user registration ====")
     try {
         const { email, password } = req.body;
         // Check if email already exists
@@ -22,13 +23,16 @@ router.post('/register', async (req, res) => {
         // Generate a token
         const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
         res.status(201).json({ message: "User created successfully", token });
+        console.log("User created successfully")
     } catch (error) {
         res.status(400).json({ message: error.message });
+        console.log("Error creating user")
     }
 });
 
 // Login endpoint
 router.post('/login', async (req, res) => {
+    console.log("\n\n==== User login ====")
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email }); // Find user by email
@@ -40,11 +44,14 @@ router.post('/login', async (req, res) => {
             // Generate a token
             const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
             res.json({ message: "Login successful", token });
+            console.log("Login successful")
         } else {
             res.status(401).json({ message: "Invalid credentials" });
+            console.log("Invalid credentials")
         }
     } catch (error) {
         res.status(400).json({ message: error.message });
+        console.log("Error logging in")
     }
 });
 
