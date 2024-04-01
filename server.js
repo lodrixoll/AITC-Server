@@ -1,9 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const appRoutes = require('./routes/api'); // Import the routes
+const userRoutes = require('./routes/users'); 
+const uploadRoutes = require('./routes/upload'); 
+const chatRoutes = require('./routes/chat'); 
 require('dotenv').config();
 
+// create express app
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -18,10 +21,14 @@ mongoose.connect(process.env.MONGODB_URI)
     process.exit(1);
   });
 
-// Middleware
+// Middlewares
 app.use(cors());
 app.use(express.json());
-app.use('/api', appRoutes);
+
+// Use the routers
+app.use('/api/users', userRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
