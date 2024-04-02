@@ -4,6 +4,7 @@ const Transaction = require('../models/Transaction');
 
 // Endpoint to create a new transaction
 router.post('/', async (req, res) => {
+    console.log("\n\n==== New Transaction ====")
     try {
         const transaction = new Transaction(req.body);
         await transaction.save();
@@ -15,6 +16,7 @@ router.post('/', async (req, res) => {
 
 // Endpoint to get all transactions
 router.get('/', async (req, res) => {
+    console.log("\n\n==== Get all Transactions ====")
     try {
         const transactions = await Transaction.find();
         res.json(transactions);
@@ -25,6 +27,7 @@ router.get('/', async (req, res) => {
 
 // Endpoint to seed the database with predefined transactions
 router.post('/seed', async (req, res) => {
+    console.log("\n\n==== Seed Transactions ====")
     const seedData = [
         { id: 1, address: "123 Maple Street", Seller: "Alex Johnson", "Listing Agent": "Samantha Right", "Listing Broker": "Keller Williams Realty", Buyer: "Jordan Smith", "Buyer's Agent": "Michael Brown", "Buyer's Broker": "Coldwell Banker" },
         { id: 2, address: "456 Oak Avenue", Seller: "Emily Turner", "Listing Agent": "Lucas Graham", "Listing Broker": "Century 21", Buyer: "Olivia King", "Buyer's Agent": "Sophia Carter", "Buyer's Broker": "RE/MAX" },
@@ -36,7 +39,22 @@ router.post('/seed', async (req, res) => {
     try {
         await Transaction.deleteMany(); // Optional: Clears the existing transactions before seeding
         await Transaction.insertMany(seedData);
-        res.status(201).json({ message: "Database seeded with transactions successfully" });
+        res.status(201).json({ message: "Transactions database seeded successfully" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Endpoint to delete a transaction by id
+router.delete('/:id', async (req, res) => {
+    console.log("\n\n==== Delete Transaction by ID ====")
+    try {
+        const transaction = await Transaction.findByIdAndDelete(req.params.id);
+        if (!transaction) {
+            return res.status(404).json({ message: "Transaction not found" });
+        }
+        console.log(`Transaction with id ${transaction.id} was deleted`);
+        res.status(200).json({ message: "Transaction deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
