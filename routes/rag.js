@@ -78,4 +78,10 @@ router.post('/', async (req, res) => {
     res.json(JSON.parse(response));
 });
 
+// Static rag route to save spend on openai usage
+router.post('/static', async (req, res) => {
+    res.json({ "Seller": "Prem Moktan", "Listing Agent": "Diana Winkler", "Listing Broker": "Engel & Volkers Healdsburg", "Buyer": "Prem Moktan", "Buyer's Agent": "Laurie Walker", "Buyer's Broker": "Engel & Volkers Healdsburg" });
+});
+
+
 module.exports = router;
