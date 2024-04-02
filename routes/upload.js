@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid'); // Import UUID to generate unique IDs
 
 require('dotenv').config();
 
@@ -19,8 +20,11 @@ const storage = multer.diskStorage({
         cb(null, uploadsDir); // Use the uploads directory
     },
     filename: function(req, file, cb) {
-        // Generate a unique filename
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+        // Generate a unique filename using UUID
+        const uniqueId = uuidv4();
+        const filename = uniqueId + path.extname(file.originalname);
+        cb(null, filename);
+        req.fileUniqueId = uniqueId; // Attach the uniqueId to the request object
     }
 });
 console.log("Multer storage configured")
@@ -33,9 +37,8 @@ console.log("Multer initialized")
 router.post('/', upload.single('file'), (req, res) => {
     console.log("\n\n==== Uploading File ====")
     try {
-        // File is automatically saved to the specified directory with multer
-        // You can perform any additional database operation here if needed
-        res.status(201).json({ message: "File uploaded successfully", filePath: req.file.path });
+        // Return the unique ID in the response
+        res.status(201).json({ message: "File uploaded successfully", uniqueId: req.fileUniqueId, filePath: req.file.path });
         console.log("File uploaded successfully")
     } catch (error) {
         res.status(400).json({ message: error.message });

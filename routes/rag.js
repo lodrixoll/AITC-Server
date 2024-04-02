@@ -7,6 +7,7 @@ const { OpenAIEmbeddings, ChatOpenAI } = require("@langchain/openai");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { pull } = require("langchain/hub");
 const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
+const path = require('path');
 
 require('dotenv').config();
 
@@ -16,8 +17,17 @@ router.post('/', async (req, res) => {
 
     console.log("\n\n==== New RAG ====")
 
+    // Extract the unique ID from the request body
+    const uniqueId = req.body.uniqueId;
+    if (!uniqueId) {
+        return res.status(400).json({ message: "Unique ID is required" });
+    }
+
+    // Construct the file path using the unique ID
+    const filePath = path.join(__dirname, '..', 'uploads', uniqueId + '.pdf');
+
     // load docs
-    const loader = new PDFLoader("uploads/example.pdf");
+    const loader = new PDFLoader(filePath);
     const docs = await loader.load();
     console.log(`Loaded ${docs.length} documents`)
 
@@ -35,7 +45,7 @@ router.post('/', async (req, res) => {
     );
 
     // Retrieve and generate using the relevant snippets of the blog.
-    const retriever = vectorStore.asRetriever(75);
+    const retriever = vectorStore.asRetriever(100);
     const prompt = await pull("rlm/rag-prompt");
     const llm = new ChatOpenAI({ modelName: "gpt-4-turbo-preview", temperature: 0 });
 
