@@ -67,7 +67,9 @@ router.post('/', async (req, res) => {
         question: "What are the names of the people that are the Seller, " + 
                   "Listing Agent, Listing Broker, Buyer, Buyer's Agent, " + 
                   "Buyer's Broker, in this real estate purchase agreement? " + 
-                  "Your response will be used in production code therefore you are allowed to respond with plain JSON object only. Do not include any markdown or preceed your response with special characters.",
+                  "Your response will be used in production code therefore you are required to respond in the following format " + 
+                  "{ \"Seller\": \"Identified Seller...\", \"Listing Agent\": \"Identified Listing Agent...\", \"Listing Broker\": \"Identified Listing Broker...\", \"Buyer\": \"Identified Buyer...\", \"Buyer's Agent\": \"Identified Buyer's Agent...\", \"Buyer's Broker\": \"Identified Buyer's Broker...\" } " + 
+                  "Do not include any markdown in your response or preceed your response with special characters.",
         context: retrievedDocs,
       });
     console.log(response);
