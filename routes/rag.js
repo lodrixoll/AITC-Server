@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
     );
 
     // Retrieve and generate using the relevant snippets of the blog.
-    const retriever = vectorStore.asRetriever(15);
+    const retriever = vectorStore.asRetriever(20);
     const prompt = await pull("rlm/rag-prompt");
     const llm = new ChatOpenAI({ modelName: "gpt-4-turbo-preview", temperature: 0 });
 
