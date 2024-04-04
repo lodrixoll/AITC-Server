@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const transactionSchema = new mongoose.Schema({
     address: String,
+    price: String,
     Seller: String,
     "Listing Agent": String,
     "Listing Broker": String,
