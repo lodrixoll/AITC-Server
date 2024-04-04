@@ -78,10 +78,20 @@ router.post('/', async (req, res) => {
     res.json(JSON.parse(response));
 });
 
-// Static rag route to save spend on openai usage
+// Static routes
 router.post('/static', async (req, res) => {
-  console.log("\n\n==== New Static RAG ====")
+  console.log("\n\n==== /api/rag/static ====")
+  res.json({address: "1191 Loma Court", Seller: "Diana Winkler", "Listing Agent": "Stewart L. Moore", "Listing Broker": "Engel & Volkers Sonoma County", "Buyer": "Prem Moktan", "Buyer's Agent": "Niccolo Pigni", "Buyer's Broker": "Engel & Volkers" });
+});
+
+router.post('/static/roles', async (req, res) => {
+  console.log("\n\n==== /api/rag/static/roles ====")
   res.json({ "Seller": "Diana Winkler", "Listing Agent": "Stewart L. Moore", "Listing Broker": "Engel & Volkers Sonoma County", "Buyer": "Prem Moktan", "Buyer's Agent": "Niccolo Pigni", "Buyer's Broker": "Engel & Volkers" });
+});
+
+router.post('/static/address', async (req, res) => {
+  console.log("\n\n==== /api/rag/static/address ====")
+  res.json({address: "1191 Loma Court"});
 });
 
 
