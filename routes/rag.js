@@ -7,6 +7,7 @@ const { OpenAIEmbeddings, ChatOpenAI } = require("@langchain/openai");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 const { pull } = require("langchain/hub");
 const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
+const fs = require('fs');
 const path = require('path');
 
 require('dotenv').config();
@@ -45,7 +46,7 @@ router.post('/', async (req, res) => {
     );
 
     // Retrieve and generate using the relevant snippets of the blog.
-    const retriever = vectorStore.asRetriever(100);
+    const retriever = vectorStore.asRetriever(15);
     const prompt = await pull("rlm/rag-prompt");
     const llm = new ChatOpenAI({ modelName: "gpt-4-turbo-preview", temperature: 0 });
 
@@ -56,19 +57,20 @@ router.post('/', async (req, res) => {
     outputParser: new StringOutputParser(),
     });
 
-    // retrieve relevant docs
-    const retrievedDocs = await retriever.getRelevantDocuments(
-      "Buyer, Seller, Landlord, Tenant, Agent, Real Estate Broker (Firm), Salesperson, Buyer's Brokerage Firm, Seller's Brokerage Firm, Date"
-    );
+    // Assuming temp.txt is in the same directory as rag.js
+    const documentPath = path.join(__dirname, '..', 'documents', 'Page7.txt');
+    const documentContent = fs.readFileSync(documentPath, 'utf8');
+    const retrievedDocs = await retriever.getRelevantDocuments(documentContent);
     console.log(`Retrieved ${retrievedDocs.length} documents`)
     
     // perform the rag
     response = await ragChain.invoke({
-        question: "What are the names of the people that are the Seller, " + 
+        question: "What is the property address, total price, and what " + 
+                  "are the names of the people that are the Seller, " + 
                   "Listing Agent, Listing Broker, Buyer, Buyer's Agent, " + 
                   "Buyer's Broker, in this real estate purchase agreement? " + 
                   "Your response will be used in production code therefore you are required to respond in the following format " + 
-                  "{ \"Seller\": \"Identified Seller...\", \"Listing Agent\": \"Identified Listing Agent...\", \"Listing Broker\": \"Identified Listing Broker...\", \"Buyer\": \"Identified Buyer...\", \"Buyer's Agent\": \"Identified Buyer's Agent...\", \"Buyer's Broker\": \"Identified Buyer's Broker...\" } " + 
+                  "{ \"address\": \"Identified address...\", \"price\": \"Identified total price...\", \"Seller\": \"Identified Seller...\", \"Listing Agent\": \"Identified Listing Agent...\", \"Listing Broker\": \"Identified Listing Broker...\", \"Buyer\": \"Identified Buyer...\", \"Buyer's Agent\": \"Identified Buyer's Agent...\", \"Buyer's Broker\": \"Identified Buyer's Broker...\" } " + 
                   "Do not include any markdown in your response or preceed your response with special characters.",
         context: retrievedDocs,
       });
