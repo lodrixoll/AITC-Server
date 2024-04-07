@@ -31,18 +31,13 @@ router.post('/', (req, res) => {
     axios.post(url, form, config)
     .then(response => {
         const elements = response.data.elements;
-        const htmlDir = path.join(__dirname, '../html'); // Define the path for the html directory
+        let pageNumber = 0;
 
-        // Check if the html directory exists, if not, create it
-        if (!fs.existsSync(htmlDir)) {
-            fs.mkdirSync(htmlDir, { recursive: true });
-        }
-
-        // Iterate over elements and save each page's elements in separate HTML files
         elements.forEach(element => {
-            const filePath = path.join(htmlDir, `empty-page-${element.page}.html`);
-            // Append the element's HTML content to the corresponding page file
-            fs.appendFileSync(filePath, element.html + "\n", { encoding: 'utf8' });
+            userPage = element.html;
+            // make post request to /knowledge/document
+            emptyPage = getPage("knowledge/PurchaseAgreementEmpty.pdf", pageNumber);
+            signedPage = getPage("knowledge/PurchaseAgreementSigned.pdf", pageNumber);
         });
         console.log("File analyzed and HTML content saved successfully.");
         
