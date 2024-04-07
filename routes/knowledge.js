@@ -63,12 +63,32 @@ router.post('/add', async (req, res) => {
         }
 
         console.log("File analyzed and HTML content saved successfully.");
-        res.status(200).json({ message: 'File analyzed and HTML content saved successfully', data: response.data });
+        res.status(200).json({ message: 'File analyzed and HTML content saved successfully'});
     })
     .catch(error => {
         console.error('Error during file analysis:', error.message);
         res.status(500).json({ message: 'Error during file analysis', error: error.message });
     });
+});
+
+// Endpoint to fetch a specific page based on document title and page number
+router.post('/fetch', async (req, res) => {
+    try {
+        const { title, pageNumber } = req.body; // Destructure title and pageNumber from request body
+
+        // Find the document in the database based on title and pageNumber
+        const pageContent = await Knowledge.findOne({ FileName: title, PageNumber: pageNumber });
+
+        if (!pageContent) {
+            return res.status(404).json({ message: `Page ${pageNumber} of document titled "${title}" not found` });
+        }
+
+        // If the document is found, send the HTML content as response
+        res.status(200).json({ content: pageContent.Content });
+    } catch (error) {
+        console.error('Error fetching page:', error.message);
+        res.status(500).json({ message: 'Error fetching page', error: error.message });
+    }
 });
 
 module.exports = router;
