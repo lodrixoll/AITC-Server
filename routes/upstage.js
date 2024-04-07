@@ -57,6 +57,7 @@ router.post('/', async (req, res) => {
             const unsignedPage = await getPageHTML("knowledge/PurchaseAgreementUnsigned.pdf", pageNumber); // Use pageNumber in the call
             const pageSummary = await validatePage(emptyPage, unsignedPage, userPage); // Await the async call
             documentSummary += pageSummary;
+            documentSummary += `\n\n\-------------- END OF PAGE ${pageNumber} -------------------\n\n`;
             pageNumber++; // Increment pageNumber for the next iteration
         }
 
@@ -70,6 +71,40 @@ router.post('/', async (req, res) => {
         
         // Optionally, you can do something with pagesHTML here, like saving to a database or returning in the response
         res.status(200).json({ message: 'File analyzed and HTML content saved successfully', data: pagesHTML });
+    } catch (error) {
+        console.error('Error during file analysis:', error.message);
+        res.status(500).json({ message: 'Error during file analysis', error: error.message });
+    }
+});
+
+router.post('/test', async (req, res) => {
+    console.log("\n\n==== NEW TEST ====");
+    
+    try {
+        // Create the temp directory if it doesn't exist
+        await fs.promises.mkdir('temp', { recursive: true });
+        // Initialize the path for the document summary file
+        const summaryFilePath = 'temp/documentSummary.txt';
+        // Ensure the file is empty before starting to append text
+        await fs.promises.writeFile(summaryFilePath, '');
+
+        for (let i = 1; i < 28; i++) {
+            console.log("Parsing Document: " + i);
+            const userPage = await getPageHTML("knowledge/PurchaseAgreementUserUpdated.pdf", i);
+            const emptyPage = await getPageHTML("knowledge/PurchaseAgreementEmpty.pdf", i);
+            const unsignedPage = await getPageHTML("knowledge/PurchaseAgreementUnsigned.pdf", i);
+            const pageSummary = await validatePage(emptyPage, unsignedPage, userPage);
+
+            // Append the current page's summary to the document summary file
+            await fs.promises.appendFile(summaryFilePath, `\n\n\-------------- BEGIN PAGE ${i} ANALYSIS -------------------\n\n` + 
+                                                           pageSummary + 
+                                                          `\n\n\-------------- END PAGE ${i} ANALYSIS -------------------\n\n`);
+        }
+
+        console.log('Document summary saved successfully.');
+
+        // Optionally, you can do something with pagesHTML here, like saving to a database or returning in the response
+        res.status(200).json({ message: 'File analyzed and HTML content saved successfully', data: {} }); // Updated to reflect that pagesHTML is not used here
     } catch (error) {
         console.error('Error during file analysis:', error.message);
         res.status(500).json({ message: 'Error during file analysis', error: error.message });
