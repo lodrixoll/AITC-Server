@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
     console.log("\n\n==== New RAG ====")
 
     // Extract the unique ID from the request body
-    const uniqueId = req.body.uniqueId;
+    const uniqueId = "f2728880-3fd4-47db-94c2-f8d2b038e1f3"; // TEMP req.body.uniqueId;
     if (!uniqueId) {
         return res.status(400).json({ message: "Unique ID is required" });
     }
@@ -34,8 +34,8 @@ router.post('/', async (req, res) => {
 
     // split the documents into chunks
     const textSplitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1000,
-    chunkOverlap: 200,
+    chunkSize: 5000,
+    chunkOverlap: 1000,
     });
     const splits = await textSplitter.splitDocuments(docs);
 
@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
     );
 
     // Retrieve and generate using the relevant snippets of the blog.
-    const retriever = vectorStore.asRetriever(20);
+    const retriever = vectorStore.asRetriever(27);
     const prompt = await pull("rlm/rag-prompt");
     const llm = new ChatOpenAI({ modelName: "gpt-4-turbo-preview", temperature: 0 });
 
@@ -63,12 +63,24 @@ router.post('/', async (req, res) => {
     const retrievedDocs = await retriever.getRelevantDocuments(documentContent);
     console.log(`Retrieved ${retrievedDocs.length} documents`)
     
+    // Assuming you want to store the pageContent of retrievedDocs in a temporary text file
+    const tempFilePath = path.join(__dirname, '..', 'temp', 'retrievedDocsContent.txt');
+    let fileContent = "";
+
+    retrievedDocs.forEach(doc => {
+        fileContent += doc.pageContent + "\n\n\n-----------------------------------------------\n\n\n"; // Adding a newline for separation between documents
+    });
+
+    fs.writeFileSync(tempFilePath, fileContent);
+    console.log(`Stored retrieved documents content in ${tempFilePath}`);
+    
     // perform the rag
     response = await ragChain.invoke({
         question: "What is the property address, total price, and what " + 
                   "are the names of the people that are the Seller, " + 
                   "Listing Agent, Listing Broker, Buyer, Buyer's Agent, " + 
                   "Buyer's Broker, in this real estate purchase agreement? " + 
+                  "Look for this information below the following line: CALIFORNIA RESIDENTIAL PURCHASE AGREEMENT AND JOINT ESCROW INSTRUCTIONS (RPA PAGE 1 OF 16) and use the corresponding format defined above it to find the relevant data" + 
                   "Your response will be used in production code therefore you are required to respond in the following format " + 
                   "{ \"address\": \"Identified address...\", \"price\": \"Identified total price...\", \"Seller\": \"Identified Seller...\", \"Listing Agent\": \"Identified Listing Agent...\", \"Listing Broker\": \"Identified Listing Broker...\", \"Buyer\": \"Identified Buyer...\", \"Buyer's Agent\": \"Identified Buyer's Agent...\", \"Buyer's Broker\": \"Identified Buyer's Broker...\" } " + 
                   "Do not include any markdown in your response or preceed your response with special characters.",
