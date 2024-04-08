@@ -34,7 +34,11 @@ COMPLIANT
 
 -------------- BEGIN PAGE 5 ANALYSIS -------------------
 
-COMPLIANT
+NOT COMPLIANT
+
+- The dates next to the seller and buyer names are not filled in.
+- The second seller signature is missing.
+- The second buyer signature and date are missing.
 
 -------------- END PAGE 5 ANALYSIS -------------------
 
@@ -154,7 +158,12 @@ COMPLIANT
 
 -------------- BEGIN PAGE 20 ANALYSIS -------------------
 
-COMPLIANT
+NOT COMPLIANT
+
+- Missing buyer's and seller's initials in section 27.
+- Missing Date in section 27.
+- Property Address typo in header.
+- Incomplete text in section 27 ("TIME OF ESSENCE; ENTIRE CONTRACT; CHANGES" is not fully articulated as in the compliant document).
 
 -------------- END PAGE 20 ANALYSIS -------------------
 

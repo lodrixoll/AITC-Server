@@ -90,7 +90,7 @@ router.post('/test', async (req, res) => {
 
         for (let i = 1; i < 28; i++) {
             console.log("Parsing Document: " + i);
-            const userPage = await getPageHTML("knowledge/bad.pdf", i);
+            const userPage = await getPageHTML("knowledge/PurchaseAgreementUserUpdated.pdf", i);
             const emptyPage = await getPageHTML("knowledge/PurchaseAgreementEmpty.pdf", i);
             const unsignedPage = await getPageHTML("knowledge/PurchaseAgreementUnsigned.pdf", i);
             const pageSummary = await validatePage(emptyPage, unsignedPage, userPage);
@@ -156,6 +156,7 @@ async function validatePage(emptyPageHTML, unsignedPageHTML, userPageHTML) {
                         'Make sure to not be too strict when considering format - make sure to look for nearby HTML elements that might be relevant including dates, times, printed names, and potential signatures!' +
                         'Remeber that if there is space for multiple buyers in the empty document but only one has ' +
                         'signed in the user uploaded document then that is still considered compliant because typically only one person is listed as buying a particular property. ' +
+                        'Also be sure to check for valid initials where necessary. ' +
                         'Take a deep breath and relax. Remember to think of a plan first then proceed slowly and step by step.' +
                         'Respond with a single word: COMPLIANT or NOT COMPLIANT only. ' +
                         'If not compliant list the actions that must be taken to make it compliant. '
