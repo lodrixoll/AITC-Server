@@ -138,11 +138,21 @@ async function validatePage(emptyPageHTML, unsignedPageHTML, userPageHTML) {
         const response = await openai.chat.completions.create({
             model: 'gpt-4-turbo-preview',
             messages: [
-                { role: 'system', content: 'You are a professional real estate transaction compliance expert. Your goal is to help real estate agents determine if a document is compliant. You will be provided with the empty document, the unsigned document, and the user uploaded document as HTML content. It is then your job to make a determination and explain your reasoning.' },
-                { role: 'user', content: 'Can you please validate this document?' },
-                { role: 'user', content: 'This is the empty page: ' + emptyPageHTML },
-                { role: 'user', content: 'This is the full page: ' + unsignedPageHTML },
-                { role: 'user', content: 'This is the user submitted page: ' + userPageHTML }
+                { role: 'system', content: 
+                    'You are a professional real estate transaction coordinator expert. ' +
+                    'Your goal is to determine if a given transaction document is compliant or not. ' +
+                    'You will be provided with the unsigned document & the user ' +
+                    'uploaded document as HTML content for your reference. The HTML content was generated using OCR on PDFS generated using DocuSign so do not make any determinations about structure & typos in names & signatures.' +
+                    'The unsigned document has been prepopulated with sample data from a previous & seperate transaction to show you ' +
+                    'the desired forms that should be filled out. It is missing the signature data. ' +
+                    'The user uploaded document will contain the actual data (including signatures) that was uploaded by the user.' +
+                    'It is then your job to make a compliance determination.' + 
+                    'Please respond with a single word: COMPLIANT or NOT COMPLIANT. ' +
+                    'If not compliant list the actions that must be taken to make it compliant.' 
+                },
+                { role: 'user', content: 'Can you please validate this purchase agreement document?' },
+                { role: 'user', content: 'This is the unsgined document: ' + unsignedPageHTML },
+                { role: 'user', content: 'This is the user submitted document: ' + userPageHTML }
             ]
         });
 
