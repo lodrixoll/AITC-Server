@@ -26,11 +26,7 @@ COMPLIANT
 
 -------------- BEGIN PAGE 4 ANALYSIS -------------------
 
-NOT COMPLIANT
-
-Actions to be taken:
-1. The second Buyer/Tenant signature and date need to be completed.
-2. The second Seller/Housing Provider signature and date need to be completed.
+COMPLIANT
 
 -------------- END PAGE 4 ANALYSIS -------------------
 
@@ -38,14 +34,7 @@ Actions to be taken:
 
 -------------- BEGIN PAGE 5 ANALYSIS -------------------
 
-NOT COMPLIANT
-
-- Multiple instances of sellers and buyers in the signatory section do not match the filled document indication of only one seller and one buyer.
-- The buyers' and sellers' names are confusingly entered (e.g., "Seller Donna" and "Seller Buyer" fields are incorrectly filled).
-- There's a missing or incorrectly entered date for the second buyer.
-- Incorrectly filled brokerage and licensing information, including missing or misaligned names and license numbers.
-- The table structure and information do not match the compliant format, especially with rows containing redundant or misplaced information.
-
+COMPLIANT
 
 -------------- END PAGE 5 ANALYSIS -------------------
 
@@ -53,10 +42,7 @@ NOT COMPLIANT
 
 -------------- BEGIN PAGE 6 ANALYSIS -------------------
 
-NOT COMPLIANT
-
-- The second Buyer/Tenant signature and date fields are empty.
-- The name for the second Seller/Landlord is missing, as is the date next to the empty Seller/Landlord field.
+COMPLIANT
 
 -------------- END PAGE 6 ANALYSIS -------------------
 
@@ -64,10 +50,7 @@ NOT COMPLIANT
 
 -------------- BEGIN PAGE 7 ANALYSIS -------------------
 
-NOT COMPLIANT
-
-- Buyer's signature is missing.
-- Date next to the buyer's signature is missing.
+COMPLIANT
 
 -------------- END PAGE 7 ANALYSIS -------------------
 
@@ -83,10 +66,7 @@ COMPLIANT
 
 -------------- BEGIN PAGE 9 ANALYSIS -------------------
 
-NOT COMPLIANT
-
-- The "Seller Credit, if any, to Buyer" section is incomplete. It must specify the amount and percentage of the purchase price.
-- Buyer's Initials and Seller's Initials are missing.
+COMPLIANT
 
 -------------- END PAGE 9 ANALYSIS -------------------
 
@@ -190,11 +170,7 @@ COMPLIANT
 
 -------------- BEGIN PAGE 22 ANALYSIS -------------------
 
-NOT COMPLIANT
-
-- No date provided for when the seller's signature was obtained.
-- One buyer's name is filled, but the document lacks the full details (printed name of second buyer, legally authorized signer, title if applicable for both buyers).
-- The seller’s part only has one signature/date filled; it lacks complete details for the second seller (printed name of second seller, legally authorized signer, title if applicable for both sellers).
+COMPLIANT
 
 -------------- END PAGE 22 ANALYSIS -------------------
 
@@ -218,11 +194,7 @@ COMPLIANT
 
 -------------- BEGIN PAGE 25 ANALYSIS -------------------
 
-NOT COMPLIANT
-
-- Second buyer's name is missing.
-- Second buyer's signature date is missing.
-- First buyer's signature date format should match the correct format as shown in the compliant document ("Buyer Name Date"). It is currently separated and on different lines.
+COMPLIANT
 
 -------------- END PAGE 25 ANALYSIS -------------------
 
@@ -238,10 +210,7 @@ COMPLIANT
 
 -------------- BEGIN PAGE 27 ANALYSIS -------------------
 
-NOT COMPLIANT
-
-- Only one date is filled in, the second date field for Buyer/Seller/Landlord/Tenant is left blank.
-- The names of both parties involved (Buyer/Seller/Landlord/Tenant) should be provided. Only one name is mentioned, John Mac.
+COMPLIANT
 
 -------------- END PAGE 27 ANALYSIS -------------------
 
