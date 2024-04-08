@@ -90,7 +90,7 @@ router.post('/test', async (req, res) => {
 
         for (let i = 1; i < 28; i++) {
             console.log("Parsing Document: " + i);
-            const userPage = await getPageHTML("knowledge/PurchaseAgreementUserUpdated.pdf", i);
+            const userPage = await getPageHTML("knowledge/bad.pdf", i);
             const emptyPage = await getPageHTML("knowledge/PurchaseAgreementEmpty.pdf", i);
             const unsignedPage = await getPageHTML("knowledge/PurchaseAgreementUnsigned.pdf", i);
             const pageSummary = await validatePage(emptyPage, unsignedPage, userPage);
@@ -140,18 +140,25 @@ async function validatePage(emptyPageHTML, unsignedPageHTML, userPageHTML) {
             messages: [
                 { role: 'system', content: 
                     'You are a professional real estate transaction coordinator expert. ' +
-                    'Your goal is to determine if a given transaction document is compliant or not. ' +
-                    'You will be provided with the unsigned document & the user ' +
-                    'uploaded document as HTML content for your reference. The HTML content was generated using OCR on PDFS generated using DocuSign so do not make any determinations about structure & typos in names & signatures.' +
-                    'The unsigned document has been prepopulated with sample data from a previous & seperate transaction to show you ' +
-                    'the desired forms that should be filled out. It is missing the signature data. ' +
-                    'The user uploaded document will contain the actual data (including signatures) that was uploaded by the user.' +
-                    'It is then your job to make a compliance determination.' + 
-                    'Please respond with a single word: COMPLIANT or NOT COMPLIANT. ' +
-                    'If not compliant list the actions that must be taken to make it compliant.' 
+                    'Your task is to determine if a given transaction document is compliant or not. ' +
+                    'You have access to the unfilled version of the document, a filled & compliant ' + 
+                    'version of the document, and the corresponding user submitted document. ' +
+                    'You will accomplish this goal by first comparing the unfilled version of the document ' +
+                    'with the compliant version to determine what fields are necessary to consider this document compliant.' +
+                    'Then you will compare these findings with the user submitted document to make a final determination of the user uploaded document. ' +
+                    'The filled document has been prepoulated with fake sample data to show you the desired format ONLY. ' +
+                    'All of the documents will be provided as HTML content.' + 
+                    'This HTML content was generated using OCR on PDF documents so pay NO attention to typos in names & improper HTML formatting. ' +
+                    'Additionally the user submitted documents were signed & generated using DocuSign' +
+                    'Make sure to not be too strict! Look for nearby HTML elements that might be relevant!' +
+                    'Respond with a single word: COMPLIANT or NOT COMPLIANT only. ' +
+                    'If not compliant list the actions that must be taken to make it compliant. ' +
+                    'Remeber that for each transaction is only one buyer, seller, listing agent, and buyer agent. ' +
+                    'Take a deep breath and proceed step by step.'
                 },
                 { role: 'user', content: 'Can you please validate this purchase agreement document?' },
-                { role: 'user', content: 'This is the unsgined document: ' + unsignedPageHTML },
+                { role: 'user', content: 'This is the empty document: ' + emptyPageHTML },
+                { role: 'user', content: 'This is the filled document: ' + unsignedPageHTML },
                 { role: 'user', content: 'This is the user submitted document: ' + userPageHTML }
             ]
         });
