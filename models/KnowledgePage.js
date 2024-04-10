@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const knowledgeSchema = new mongoose.Schema({
+const knowledgePageSchema = new mongoose.Schema({
     documentTitle: String,
     pageNumber: Number,
     emptyContent: String,
@@ -9,5 +9,5 @@ const knowledgeSchema = new mongoose.Schema({
     metaDescription: String
 }, { timestamps: true });
 
-module.exports = mongoose.model('Knowledge', knowledgeSchema);
+module.exports = mongoose.model('KnowledgePage', knowledgePageSchema);
 
