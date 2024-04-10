@@ -8,6 +8,7 @@ const ragRoutes = require('./routes/rag');
 const transactionsRoutes = require('./routes/transactions');
 const upstageRoutes = require('./routes/upstage');
 const knowledgeRoutes = require('./routes/knowledge');
+const documentRoutes = require('./routes/document');
 
 require('dotenv').config();
 
@@ -38,6 +39,7 @@ app.use('/api/rag', ragRoutes);
 app.use('/api/transactions', transactionsRoutes);
 app.use('/api/upstage', upstageRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
+app.use('/api/document', documentRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
