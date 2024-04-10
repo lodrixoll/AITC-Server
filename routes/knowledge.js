@@ -4,7 +4,8 @@ const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path'); // Import path module to handle file paths
-const Knowledge = require('../models/KnowledgePage');
+const KnowledgePage = require('../models/KnowledgePage');
+const UserPage = require('../models/UserPage');
 const OpenAI = require('openai');
 
 require('dotenv').config();
@@ -57,12 +58,12 @@ router.post('/add', async (req, res) => {
 
         // Iterate through collected pages and save each to the database
         for (const [page, htmlContent] of Object.entries(pagesHTML)) {
-            const knowledge = new Knowledge({
+            const knowledgePage = new KnowledgePage({
                 FileName: filename,
                 PageNumber: parseInt(page), // Convert page number to integer
                 Content: htmlContent
             });
-            await knowledge.save();
+            await knowledgePage.save();
         }
 
         console.log("File analyzed and HTML content saved successfully.");
@@ -96,9 +97,9 @@ router.post('/fetch', async (req, res) => {
 
 router.post('/seed', async (req, res) => {
     try {
-        // Drop all items from the knowledge database
-        console.log("Dropping all items from the knowledge database...");
-        await Knowledge.deleteMany({});
+        // Drop all items from the knowledgePage database
+        console.log("Dropping all items from the knowledgePage database...");
+        await KnowledgePage.deleteMany({});
 
         console.log("Reading PDF files...");
         const pdfFiles = {
@@ -150,7 +151,7 @@ router.post('/seed', async (req, res) => {
 
         console.log("Saving HTML content to database...");
         for (const [page, { emptyContent, completedContent }] of Object.entries(pagesHTML)) {
-            const knowledge = new Knowledge({
+            const knowledgePage = new KnowledgePage({
                 documentTitle: await getTitle(emptyContent),
                 pageNumber: parseInt(page),
                 emptyContent: emptyContent,
@@ -158,7 +159,7 @@ router.post('/seed', async (req, res) => {
                 complianceChecklist: '', // Assuming no initial data
                 metaDescription: '' // Assuming no initial data
             });
-            await knowledge.save();
+            await knowledgePage.save();
         }
         console.log("HTML content saved to database.");
         res.status(200).json({ message: 'PDFs seeded successfully' });
@@ -168,11 +169,68 @@ router.post('/seed', async (req, res) => {
     }
 });
 
+// Endpoint to seed the user database with the valid user PA
+router.post('/seed-user', async (req, res) => {
+    try {
+        // Drop all items from the userPage database
+        console.log("Dropping all items from the userPage database...");
+        await UserPage.deleteMany({});
+
+        console.log("Reading ValidPA.pdf file...");
+        const pdfFile = 'ValidPA.pdf';
+        const url = "https://api.upstage.ai/v1/document-ai/layout-analyzer";
+        const api_key = process.env.UPSTAGE_API_KEY;
+
+        const formData = new FormData();
+        formData.append('document', fs.createReadStream(path.join(__dirname, '../knowledge', pdfFile)));
+
+        const config = {
+            headers: {
+                ...formData.getHeaders(),
+                "Authorization": `Bearer ${api_key}`
+            }
+        };
+
+        console.log("Uploading ValidPA.pdf to Upstage...");
+        const response = await axios.post(url, formData, config);
+
+        const elements = response.data.elements;
+
+        let pagesHTML = {};
+        elements.forEach(element => {
+            const page = element.page;
+            if (!pagesHTML[page]) {
+                pagesHTML[page] = "";
+            }
+            pagesHTML[page] += element.html;
+        });
+
+        console.log("Saving HTML content to database...");
+        for (const [page, htmlContent] of Object.entries(pagesHTML)) {
+            const userPage = new UserPage({
+                documentTitle: await getTitle(htmlContent),
+                pageNumber: parseInt(page),
+                content: htmlContent,
+                compliance: false, // Default to false
+                reasoning: '',
+                instructions: '',
+                metaDescription: ''
+            });
+            await userPage.save();
+        }
+        console.log("HTML content saved to database.");
+        res.status(200).json({ message: 'ValidPA.pdf seeded successfully' });
+    } catch (error) {
+        console.error('Error during seeding ValidPA.pdf:', error.message);
+        res.status(500).json({ message: 'Error during seeding ValidPA.pdf', error: error.message });
+    }
+});
+
 // Endpoint to save HTML content of a specific page to files
 router.post('/save-html', async (req, res) => {
     try {
         const { pageNumber } = req.body;
-        const pageContents = await Knowledge.find({ pageNumber: pageNumber });
+        const pageContents = await KnowledgePage.find({ pageNumber: pageNumber });
 
         if (!pageContents.length) {
             return res.status(404).json({ message: `No documents found with page number ${pageNumber}` });
