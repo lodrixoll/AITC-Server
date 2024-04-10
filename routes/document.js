@@ -52,7 +52,7 @@ router.post('/add', async (req, res) => {
                 pagesHTML[element.page] = "";
             }
             // Append the element's HTML to the corresponding page's HTML content
-            pagesHTML[element.page] += element.html;
+            pagesHTML[element.page] += (element.html + '\n');
         });
 
         // Iterate through collected pages and save each to the database
