@@ -11,14 +11,56 @@ require('dotenv').config();
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
+// Add new validation document to database
+router.post('/add-validation-document', async (req, res) => {
+    console.log("\n\n==== Adding New Validation Document ====")
 
-// test endpoint by logging something to console and return success
-router.get('/test', (req, res) => {
-    console.log('test');
-    res.send('success');
+    const directoryPath = path.join(__dirname, '..', 'validation');
+    fs.readdir(directoryPath, async (err, files) => {
+        if (err) {
+            console.error('Could not list the directory.', err);
+            res.status(500).send('Failed to list validation documents');
+            return;
+        }
+
+        for (const file of files) {
+            const filePath = path.join(directoryPath, file);
+            const htmlContent = fs.readFileSync(filePath, 'utf8');
+
+            const details = await extractDetails(htmlContent);
+            if (!details) {
+                console.error('Failed to extract details for file:', file);
+                continue; // Skip this file if details extraction fails
+            }
+            const detailsObj = JSON.parse(details);
+
+            let doc = await Document.findOne({ documentTitle: detailsObj.title, type: 'validation' });
+            if (!doc) {
+                doc = new Document({
+                    type: 'validation',
+                    documentTitle: detailsObj.title,
+                    totalPages: detailsObj.totalPages,
+                    pages: [{
+                        pageNumber: detailsObj.currentPage,
+                        html: htmlContent,
+                    }]
+                });
+            } else {
+                doc.pages.push({
+                    pageNumber: detailsObj.currentPage,
+                    html: htmlContent,
+                });
+            }
+
+            await doc.save();
+        }
+
+        console.log("Validation documents processed successfully.");
+        res.status(200).json({ message: 'Validation documents processed successfully'});
+    });
 });
 
-// Endpoint to add new knowledge from pdf
+// Endpoint to add new document from pdf
 router.post('/add', async (req, res) => {
     console.log("\n\n==== Adding New Document ====")
 
@@ -26,7 +68,7 @@ router.post('/add', async (req, res) => {
 
     // set up request
     const api_key = process.env.UPSTAGE_API_KEY;
-    const filename = req.body.filename;
+    const filename = req.body.filename; // eventually result from upload route
     const url = "https://api.upstage.ai/v1/document-ai/layout-analyzer";
     const form = new FormData();
     form.append('document', fs.createReadStream(filename));
@@ -74,7 +116,6 @@ router.post('/add', async (req, res) => {
                     pages: [{
                         pageNumber: detailsObj.currentPage,
                         html: htmlContent,
-                        stylesheet: "", // hardcoded to blank
                     }]
                 });
             } else {
@@ -82,7 +123,6 @@ router.post('/add', async (req, res) => {
                 doc.pages.push({
                     pageNumber: detailsObj.currentPage,
                     html: htmlContent,
-                    stylesheet: "", // hardcoded to blank
                 });
             }
 
@@ -107,10 +147,12 @@ async function extractDetails(htmlContent) {
             messages: [
                 {
                     role: 'system',
-                    content: 'You are an AI trained to extract the page title, the total amount of pages, ' +
-                            'and the current page information from real estate documents. Please provide the ' +
+                    content: 'You are a professional HTML scanner special trained to extract the page title, the total amount of pages, ' +
+                            'and the current page information from HTML data. For context this data was created using using an external ' + 
+                            'api to convert real estate document PDFs to HTML to capture relevant textual and form data. Please provide the ' +
                             'desired information when given HTML content. If a page title includes page number ' +
                             'information be sure to exclude the page number information from the title. ' +
+                            'Be sure to provide the title in all uppercase letters as provided in the HTML. ' +
                             'Provide your response as a JSON object with the keys: title, totalPages, and currentPage. ' +
                             'Do not preceed your response with the word json nor any special characters.'
                 },
