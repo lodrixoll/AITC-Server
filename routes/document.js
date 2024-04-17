@@ -11,9 +11,96 @@ require('dotenv').config();
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
+// validate a user uploaded document with a corresponding validation document
+router.post('/validate', async (req, res) => {
+    console.log("\n\n==== Validating Document ====");
+
+    const { documentName } = req.body;
+    if (!documentName) {
+        return res.status(400).send('Document name is required');
+    }
+
+    try {
+        // Fetch the validation document
+        const validationDocument = await Document.findOne({ documentTitle: documentName, type: 'validation' });
+        if (!validationDocument) {
+            return res.status(404).send('Validation document not found');
+        }
+
+        // Fetch the user document
+        const userDocument = await Document.findOne({ documentTitle: documentName, type: 'user' });
+        if (!userDocument) {
+            return res.status(404).send('User document not found');
+        }
+
+        // Assuming both documents have the same number of pages and are sorted by pageNumber
+        let validationResult = { isValid: true, errors: [] };
+
+        for (let i = 0; i < validationDocument.pages.length; i++) {
+            const validationPage = validationDocument.pages[i];
+            const userPage = userDocument.pages.find(page => page.pageNumber === validationPage.pageNumber);
+
+            const result = await validatePage(validationPage.html, userPage.html);
+
+            console.log(result);
+        }
+
+        res.status(200).json(validationResult);
+    } catch (error) {
+        console.error('Error validating document:', error);
+        res.status(500).send('Error validating document');
+    }
+});
+
+async function validatePage(validationHtml, userHtml) {
+    try {
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4-turbo',
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are a professional real estate contract document validator. Your goal is to make
+                              a determination if a user uploaded document is valid or not. You will accomplish this goal by
+                              verifying that all of the required information is present on the user uploaded page. You will 
+                              find the required information specified in the validation document with VALIDATION CHECK tags & data-highlight elements.
+                              In the validation document placeholders with four underscores i.e. ____BUYER____ define the required information. In the user uploaded document this will be a real peoples names and is considered valid merely if present in the correct location.
+                              You are simply verifying if the user uploaded the correct information in the correct places and that it has no missing fields.
+                              Assume that the user entered real data (not placeholders).
+                              If the user uploaded page is valid, please respond with 'VALID' and explain why. If the user uploaded page is not valid,
+                              please respond with 'INVALID' and explain why in great detail and provide extremely specific examples that support your reasoning. Provide your response as a json object with a "determination" key and a "reason" key.`
+                },
+                {
+                    role: 'user',
+                    content: `Is the user uploaded page valid?
+                              Validation HTML: ${validationHtml}\n\n
+                              User HTML: ${userHtml}`
+                }
+            ],
+            response_format: { type: "json_object" },
+        });
+
+        return response.choices[0].message.content;
+    } catch (error) {
+        console.error('Error extracting details:', error.message);
+        return null;
+    }
+}
+
+
+
 // Add new validation document to database
-router.post('/add-validation-document', async (req, res) => {
-    console.log("\n\n==== Adding New Validation Document ====")
+router.post('/seed-validation-documents', async (req, res) => {
+    console.log("\n\n==== Seeding Validation Documents ====")
+
+    // Delete all documents with type 'validation' before adding new ones
+    try {
+        await Document.deleteMany({ type: 'validation' });
+        console.log("Deleted existing validation documents.");
+    } catch (error) {
+        console.error('Error deleting existing validation documents:', error);
+        res.status(500).send('Failed to delete existing validation documents');
+        return;
+    }
 
     const directoryPath = path.join(__dirname, '..', 'validation');
     fs.readdir(directoryPath, async (err, files) => {
