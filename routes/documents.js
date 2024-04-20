@@ -5,85 +5,148 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 const Document = require('../models/Document');
+const Question = require('../models/Question');
 const OpenAI = require('openai');
 
 require('dotenv').config();
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
+router.post('/seed-questions', async (req, res) => {
+    console.log("\n\n==== Seeding Questions ====");
+
+    const questions = [
+        "Is at least one of the buyer checkboxes marked? If so, that means there is a buyer listed in this document.",
+        "If there is a buyer listed in this document, is their signature present and dated correctly?",
+        "Is there a buyer’s real estate broker firm in this document?",
+        "If there is a buyer’s real estate broker, is their license number present?",
+        "Is there a salesperson listed in this document?",
+        "If there is a salesperson listed in this document, is their license number present?",
+        "If there is a salesperson listed in this document is their signature present and dated correctly?"
+    ];
+
+    const questionDoc = new Question({
+        title: 'DISCLOSURE REGARDING REAL ESTATE AGENCY RELATIONSHIP',
+        questions: questions
+    });
+
+    await questionDoc.save();
+
+    console.log("Questions seeded successfully.");
+    res.status(200).json({ message: 'Questions seeded successfully' });
+});
+
 // validate a user uploaded document with a corresponding validation document
 router.post('/validate', async (req, res) => {
     console.log("\n\n==== Validating Document ====");
 
-    const { documentName } = req.body;
-    if (!documentName) {
-        return res.status(400).send('Document name is required');
-    }
-
     try {
-        // Fetch the validation document
-        const validationDocument = await Document.findOne({ documentTitle: documentName, type: 'validation' });
-        if (!validationDocument) {
-            return res.status(404).send('Validation document not found');
-        }
+        
+        const title = await extractTitle('0001.jpg');
+        console.log("Title:", title);
 
-        // Fetch the user document
-        const userDocument = await Document.findOne({ documentTitle: documentName, type: 'user' });
-        if (!userDocument) {
-            return res.status(404).send('User document not found');
-        }
+        const result = await validate(title, '0001.jpg');
 
-        for (let i = 0; i < validationDocument.pages.length; i++) {
-            const validationPage = validationDocument.pages[i];
-            const userPage = userDocument.pages.find(page => page.pageNumber === validationPage.pageNumber);
-
-            const result = await validatePage(validationPage.html, userPage.html);
-
-            console.log(result);
-        }
-
-        res.status(200).json({ message: 'Document validation successful' });
+        console.log("Document validation successful");
+        res.status(200).json({ message: 'Document validation successful', title: title, result: result });
     } catch (error) {
         console.error('Error validating document:', error);
         res.status(500).send('Error validating document');
     }
 });
 
-// helper function for openai call
-async function validatePage(validationHtml, userHtml) {
+// Helper function to extract the title from an image file
+async function validate(title, imageFileName) {
     try {
-        const response = await openai.chat.completions.create({
-            model: 'gpt-4-turbo',
-            messages: [
-                {
-                    role: 'system',
-                    content: `You are a professional real estate contract document validator. Your goal is to determine if a user uploaded document is complete or not. 
-                              You will make this determination by looking at the user uploaded document and comparing it to the corresponding validation document. 
-                              A user uploaded document is considered complete if it meets all of the criteria listed in the corresponding validation document.
-                              The validation document was created manually for you to use as a guideline when looking at the user uploaded file.
-                              When making your determination you should always look for the presenece of the required information as specified in the validation document.
-                              You do not need to pay attention to formatting nor any other specifics. The primary goal is to validate the presenece or lack of particular html elements.
-                              The user uploaded document and validation documents are provided as HTML documents and have been created using an external api to convert real estate document PDFs to HTML.
-                              The validation document has been manually altered to contain placeholder values (denoted with four underscores). When comparing to a user uploaded file you should expect real names, dates, and signatures from real people.
-                              If the user uploaded page is complete, please respond with 'COMPLETE' and explain why. If the user uploaded page is not complete,
-                              please respond with 'INCOMPLETE' and explain why in great detail and provide extremely specific examples that support your reasoning. Provide your response as a json object with a "determination" key and a "reason" key.`
-                },
-                {
-                    role: 'user',
-                    content: `Is the user uploaded page valid?
-                              Validation HTML: ${validationHtml}\n\n
-                              User HTML: ${userHtml}`
-                }
-            ],
-            response_format: { type: "json_object" },
-        });
+        // Fetch questions from the database
+        const questionDoc = await Question.findOne({ title: title });
+        if (!questionDoc) {
+            throw new Error('No questions found for the given title');
+        }
+        const questions = questionDoc.questions.join('\n');
+        console.log("Questions:", questions);
+        
+        const imagePath = path.join(__dirname, '..', 'images', imageFileName);
+        const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
 
-        return response.choices[0].message.content;
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        };
+
+        const payload = {
+            "model": "gpt-4-turbo",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": `Please answer the following questions about the document: 
+                                    ${questions}
+                                    Please respond with 'COMPLETE' or 'INCOMPLETE' and provide detailed reasons for your determination.`
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": `data:image/jpeg;base64,${base64Image}`
+                            }
+                        }
+                    ]
+                },
+            ],
+            "max_tokens": 300
+        };
+
+        const response = await axios.post("https://api.openai.com/v1/chat/completions", payload, { headers: headers });
+        return response.data.choices[0].message.content;
     } catch (error) {
-        console.error('Error extracting details:', error.message);
+        console.error('Error in validation:', error.message);
         return null;
     }
 }
+
+// Helper function to extract the title from an image file
+async function extractTitle(imageFileName) {
+    try {
+        const imagePath = path.join(__dirname, '..', 'images', imageFileName);
+        const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
+
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        };
+
+        const payload = {
+            "model": "gpt-4-turbo",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "What is the title of this document? Respond with the title ONLY. If the title contains page number information do NOT include that in your response. Provide the title exactly as you read it please."
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": `data:image/jpeg;base64,${base64Image}`
+                            }
+                        }
+                    ]
+                }
+            ],
+            "max_tokens": 300
+        };
+
+        const response = await axios.post("https://api.openai.com/v1/chat/completions", payload, { headers: headers });
+        return response.data.choices[0].message.content;
+    } catch (error) {
+        console.error('Error extracting title from image:', error);
+        return null;
+    }
+}
+
 
 // Add new validation document to database
 router.post('/seed-validation-documents', async (req, res) => {
