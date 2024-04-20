@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 // Define a schema for questions
 const questionSchema = new mongoose.Schema({
     title: String,
+    pageNumber: Number,
     questions: [String]
 });
 

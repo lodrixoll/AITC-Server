@@ -6,6 +6,7 @@ const uploadRoutes = require('./routes/upload');
 const documentsRoutes = require('./routes/documents');
 const contactsRoutes = require('./routes/contacts');
 const transactionsRoutes = require('./routes/transactions');
+const questionsRoutes = require('./routes/questions');
 
 require('dotenv').config();
 
@@ -34,6 +35,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/contacts', contactsRoutes);
 app.use('/api/transactions', transactionsRoutes);
+app.use('/api/questions', questionsRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);

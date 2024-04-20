@@ -12,40 +12,16 @@ require('dotenv').config();
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
-router.post('/seed-questions', async (req, res) => {
-    console.log("\n\n==== Seeding Questions ====");
-
-    const questions = [
-        "Is at least one of the buyer checkboxes marked? If so, that means there is a buyer listed in this document.",
-        "If there is a buyer listed in this document, is their signature present and dated correctly?",
-        "Is there a buyer’s real estate broker firm in this document?",
-        "If there is a buyer’s real estate broker, is their license number present?",
-        "Is there a salesperson listed in this document?",
-        "If there is a salesperson listed in this document, is their license number present?",
-        "If there is a salesperson listed in this document is their signature present and dated correctly?"
-    ];
-
-    const questionDoc = new Question({
-        title: 'DISCLOSURE REGARDING REAL ESTATE AGENCY RELATIONSHIP',
-        questions: questions
-    });
-
-    await questionDoc.save();
-
-    console.log("Questions seeded successfully.");
-    res.status(200).json({ message: 'Questions seeded successfully' });
-});
-
 // validate a user uploaded document with a corresponding validation document
 router.post('/validate', async (req, res) => {
     console.log("\n\n==== Validating Document ====");
 
     try {
         
-        const title = await extractTitle('0001.jpg');
+        const title = await extractTitle('0004.jpg');
         console.log("Title:", title);
 
-        const result = await validate(title, '0001.jpg');
+        const result = await validate(title, '0004.jpg');
 
         console.log("Document validation successful");
         res.status(200).json({ message: 'Document validation successful', title: title, result: result });
@@ -125,7 +101,7 @@ async function extractTitle(imageFileName) {
                     "content": [
                         {
                             "type": "text",
-                            "text": "What is the title of this document? Respond with the title ONLY. If the title contains page number information do NOT include that in your response. Provide the title exactly as you read it please."
+                            "text": "What is the title of this document? Respond with the title ONLY. If the title contains page number information do NOT include that in your response."
                         },
                         {
                             "type": "image_url",
