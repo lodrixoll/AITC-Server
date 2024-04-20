@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/Transaction');
+const Contact = require('../models/Contact');
 
 // Endpoint to create a new transaction
 router.post('/', async (req, res) => {
@@ -26,18 +27,33 @@ router.get('/', async (req, res) => {
 });
 
 // Endpoint to seed the database with predefined transactions
+// Endpoint to seed the database with predefined transactions
 router.post('/seed', async (req, res) => {
     console.log("\n\n==== Seed Transactions ====")
-    const seedData = [
-        { address: "123 Maple Street", price: "$100,000", Seller: "Alex Johnson", "Listing Agent": "Samantha Right", "Listing Broker": "Keller Williams Realty", Buyer: "Jordan Smith", "Buyer's Agent": "Michael Brown", "Buyer's Broker": "Coldwell Banker" },
-        { address: "456 Oak Avenue", price: "$200,000", Seller: "Emily Turner", "Listing Agent": "Lucas Graham", "Listing Broker": "Century 21", Buyer: "Olivia King", "Buyer's Agent": "Sophia Carter", "Buyer's Broker": "RE/MAX" },
-        { address: "789 Pine Road", price: "$300,000", Seller: "William Davis", "Listing Agent": "Emma Wilson", "Listing Broker": "Berkshire Hathaway", Buyer: "Mason Miller", "Buyer's Agent": "Isabella Garcia", "Buyer's Broker": "Sotheby's International Realty" },
-        { address: "1011 Birch Lane", price: "$400,000", Seller: "Ava Moore", "Listing Agent": "Ethan Taylor", "Listing Broker": "Redfin", Buyer: "Isabella Garcia", "Buyer's Agent": "Noah Anderson", "Buyer's Broker": "Compass" },
-        { address: "1213 Cedar Court", price: "$500,000", Seller: "Sophia Carter", "Listing Agent": "Oliver Martinez", "Listing Broker": "eXp Realty", Buyer: "Mia Hernandez", "Buyer's Agent": "Charlotte Gonzalez", "Buyer's Broker": "The Agency" }
-    ];
-
     try {
-        await Transaction.deleteMany(); // Optional: Clears the existing transactions before seeding
+        await Transaction.deleteMany(); // Clears the existing transactions
+        await Contact.deleteMany(); // Clears existing contacts
+
+        // Seed contacts first
+        const seedContacts = [
+            { name: "Ryan Valdes", role: "Buyer Broker", phone: "425-505-8181", email: "ryanvaldes@windermere.com", company: "Windermere" },
+            { name: "Aimee Cruz", role: "Transaction Coordinator", phone: "425-643-5500", email: "windermereTS@windermere.com", company: "Windermere TS" },
+            { name: "Cheryl Crane", role: "Listing Broker", phone: "206-930-2551", email: "ccrane@windermere.com", company: "Windermere" },
+            { name: "Angela Hinton", role: "Escrow", phone: "253-813-9394", email: "teamhinton@ortc.com", company: "Old Republic Title" },
+            { name: "Residential Title Unit", role: "Title", phone: "425-776-3350", email: "title.wa@ortc.com", company: "Old Republic Title" },
+            { name: "Ashley McPoland", role: "Lender", phone: "(480)206-7129", email: "amcpoland@westcapitallending.com", company: "West Capital Lending" },
+            { name: "Kelkari", role: "HOA", phone: "425-897-3400", email: "", company: "" }
+        ];
+        const contacts = await Contact.insertMany(seedContacts);
+
+        // Seed transactions with contact IDs
+        const seedData = [
+            { Address: "123 Maple Street", PurchasePrice: "$100,000", Seller: "Alex Johnson", Buyer: "Jordan Smith", Contacts: contacts.map(contact => contact._id) },
+            { Address: "456 Oak Avenue", PurchasePrice: "$200,000", Seller: "Emily Turner", Buyer: "Olivia King", Contacts: contacts.map(contact => contact._id) },
+            { Address: "789 Pine Road", PurchasePrice: "$300,000", Seller: "William Davis", Buyer: "Mason Miller", Contacts: contacts.map(contact => contact._id) },
+            { Address: "1011 Birch Lane", PurchasePrice: "$400,000", Seller: "Ava Moore", Buyer: "Isabella Garcia", Contacts: contacts.map(contact => contact._id) },
+            { Address: "1213 Cedar Court", PurchasePrice: "$500,000", Seller: "Sophia Carter", Buyer: "Mia Hernandez", Contacts: contacts.map(contact => contact._id) }
+        ];
         await Transaction.insertMany(seedData);
         res.status(201).json({ message: "Transactions database seeded successfully" });
     } catch (error) {
