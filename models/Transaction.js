@@ -1,14 +1,21 @@
 const mongoose = require('mongoose');
 
 const transactionSchema = new mongoose.Schema({
-    address: String,
-    price: String,
+    Address: String,
+    MLS: String,
+    PurchasePrice: String,
+    ClosingDate: String,
     Seller: String,
-    "Listing Agent": String,
-    "Listing Broker": String,
     Buyer: String,
-    "Buyer's Agent": String,
-    "Buyer's Broker": String
+    Contacts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Contact'
+    }],
+    TaskList: [{
+        Status: String,
+        Date: String,
+        Description: String
+    }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Transaction', transactionSchema);
@@ -28,6 +35,7 @@ module.exports = mongoose.model('Transaction', transactionSchema);
 
 // UPDATED CONTACTS SCHEMA
 // ------------------
+// Role: String
 // Name: String
 // Phone: String
 // Email: String
