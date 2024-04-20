@@ -101,7 +101,13 @@ async function extractTitle(imageFileName) {
                     "content": [
                         {
                             "type": "text",
-                            "text": "What is the title of this document? Respond with the title ONLY. If the title contains page number information do NOT include that in your response."
+                            "text": 'You are a professional image scanner special trained to extract the page title, the total amount of pages, ' +
+                                    'and the current page information from HTML data. If a page title includes page number ' +
+                                    'information be sure to exclude the page number information from the title. For example ' +
+                                    'if the title is "FAIR HOUSING AND DISCRIMINATION ADVISORY (FHDA) PAGE 2 OF 2" the ' +
+                                    'title you would respond with is "FAIR HOUSING AND DISCRIMINATION ADVISORY". ' +
+                                    'Be sure to provide the title in all uppercase letters as provided in the image. ' +
+                                    'Provide your response as a JSON object with the keys: title, totalPages, and currentPage. '
                         },
                         {
                             "type": "image_url",
