@@ -27,7 +27,6 @@ router.get('/', async (req, res) => {
 });
 
 // Endpoint to seed the database with predefined transactions
-// Endpoint to seed the database with predefined transactions
 router.post('/seed', async (req, res) => {
     console.log("\n\n==== Seed Transactions ====")
     try {

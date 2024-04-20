@@ -49,6 +49,7 @@ router.post('/validate', async (req, res) => {
     }
 });
 
+// helper function for openai call
 async function validatePage(validationHtml, userHtml) {
     try {
         const response = await openai.chat.completions.create({
@@ -83,8 +84,6 @@ async function validatePage(validationHtml, userHtml) {
         return null;
     }
 }
-
-
 
 // Add new validation document to database
 router.post('/seed-validation-documents', async (req, res) => {

@@ -69,6 +69,7 @@ router.get('/search', async (req, res) => {
     }
 });
 
+// Seed the database with contacts
 router.post('/seed', async (req, res) => {
     try {
         await Contact.deleteMany({});
