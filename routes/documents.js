@@ -33,9 +33,6 @@ router.post('/validate', async (req, res) => {
             return res.status(404).send('User document not found');
         }
 
-        // Assuming both documents have the same number of pages and are sorted by pageNumber
-        let validationResult = { isValid: true, errors: [] };
-
         for (let i = 0; i < validationDocument.pages.length; i++) {
             const validationPage = validationDocument.pages[i];
             const userPage = userDocument.pages.find(page => page.pageNumber === validationPage.pageNumber);
@@ -45,7 +42,7 @@ router.post('/validate', async (req, res) => {
             console.log(result);
         }
 
-        res.status(200).json(validationResult);
+        res.status(200).json({ message: 'Document validation successful' });
     } catch (error) {
         console.error('Error validating document:', error);
         res.status(500).send('Error validating document');
@@ -59,15 +56,16 @@ async function validatePage(validationHtml, userHtml) {
             messages: [
                 {
                     role: 'system',
-                    content: `You are a professional real estate contract document validator. Your goal is to make
-                              a determination if a user uploaded document is valid or not. You will accomplish this goal by
-                              verifying that all of the required information is present on the user uploaded page. You will 
-                              find the required information specified in the validation document with VALIDATION CHECK tags & data-highlight elements.
-                              In the validation document placeholders with four underscores i.e. ____BUYER____ define the required information. In the user uploaded document this will be a real peoples names and is considered valid merely if present in the correct location.
-                              You are simply verifying if the user uploaded the correct information in the correct places and that it has no missing fields.
-                              Assume that the user entered real data (not placeholders).
-                              If the user uploaded page is valid, please respond with 'VALID' and explain why. If the user uploaded page is not valid,
-                              please respond with 'INVALID' and explain why in great detail and provide extremely specific examples that support your reasoning. Provide your response as a json object with a "determination" key and a "reason" key.`
+                    content: `You are a professional real estate contract document validator. Your goal is to determine if a user uploaded document is complete or not. 
+                              You will make this determination by looking at the user uploaded document and comparing it to the corresponding validation document. 
+                              A user uploaded document is considered complete if it meets all of the criteria listed in the corresponding validation document.
+                              The validation document was created manually for you to use as a guideline when looking at the user uploaded file.
+                              When making your determination you should always look for the presenece of the required information as specified in the validation document.
+                              You do not need to pay attention to formatting nor any other specifics. The primary goal is to validate the presenece or lack of particular html elements.
+                              The user uploaded document and validation documents are provided as HTML documents and have been created using an external api to convert real estate document PDFs to HTML.
+                              The validation document has been manually altered to contain placeholder values (denoted with four underscores). When comparing to a user uploaded file you should expect real names, dates, and signatures from real people.
+                              If the user uploaded page is complete, please respond with 'COMPLETE' and explain why. If the user uploaded page is not complete,
+                              please respond with 'INCOMPLETE' and explain why in great detail and provide extremely specific examples that support your reasoning. Provide your response as a json object with a "determination" key and a "reason" key.`
                 },
                 {
                     role: 'user',

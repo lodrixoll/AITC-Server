@@ -3,8 +3,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const userRoutes = require('./routes/users'); 
 const uploadRoutes = require('./routes/upload');
-const documentRoutes = require('./routes/document');
-const contactRoutes = require('./routes/contact');
+const documentsRoutes = require('./routes/documents');
+const contactsRoutes = require('./routes/contacts');
+const transactionsRoutes = require('./routes/transactions');
 
 require('dotenv').config();
 
@@ -30,8 +31,9 @@ app.use(express.json());
 // Use the routers
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/document', documentRoutes);
-app.use('/api/contact', contactRoutes);
+app.use('/api/documents', documentsRoutes);
+app.use('/api/contacts', contactsRoutes);
+app.use('/api/transactions', transactionsRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
