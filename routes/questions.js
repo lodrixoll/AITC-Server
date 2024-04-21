@@ -10,33 +10,29 @@ router.post('/seed', async (req, res) => {
             title: 'DISCLOSURE REGARDING REAL ESTATE AGENCY RELATIONSHIP',
             pageNumber: 1,
             questions: [
-                "Is at least one of the buyer checkboxes marked? If so, that means there is a buyer listed in this document.",
-                "If there is a buyer listed in this document, is their signature present and dated correctly?",
-                "Is there a buyer's real estate broker firm in this document?",
-                "If there is a buyer's real estate broker, is their license number present?",
-                "Is there a salesperson listed in this document?",
-                "If there is a salesperson listed in this document, is their license number present?",
-                "If there is a salesperson listed in this document is their signature present and dated correctly?"
+                "Is there at least one buyer with a corresponding printed name, and date?",
+                "Is the Real Estate Broker (Firm) & license present in this document?",
+                "Is there a Salesperson listed with a corresponding printed name, license #, and date?"
             ]
         },
         {
             title: 'FAIR HOUSING AND DISCRIMINATION ADVISORY',
             pageNumber: 2,
             questions: [
-                "Is this page signed, name printed, and dated by at least one buyer?",
-                "Is this page signed, name printed, and dated by at least one seller?"
+                "Does this page contain at least one buyer with a printed name and date?",
+                "Does this page contain at least one seller with a printed name and date?"
             ]
         },
         {
             title: 'POSSIBLE REPRESENTATION OF MORE THAN ONE BUYER OR SELLER - DISCLOSURE AND CONSENT',
             pageNumber: 1,
             questions: [
-                "Is this page signed, name printed, and dated by at least one buyer?",
-                "Is this page signed, name printed, and dated by at least one seller?",
-                "Is the Buyer's Brokerage Firm line filled in with a firm name and license number?",
-                "Is the license present, page signed, name printed, and dated by the Buyer's Broker? Find this information immediately below the Buyer Brokerage line.",
-                "Is the Seller's Brokerage Firm line filled in with a firm name and license number?",
-                "Is the license present, page signed, name printed, and dated by the Seller's Broker? Find this information immediately below the Buyer Brokerage line."
+                "Does this page contain at least one buyer with a printed name and date?",
+                "Does this page contain at least one seller with a printed name and date?",
+                "Does this page contain the Buyers Brokerage Firm & License #?",
+                "Does this page container the Buyer Real Estate Agent with a printed name, License #, and date?",
+                "Does this page contain the Sellers Brokerage Firm & License #?",
+                "Does this page container the Seller Real Estate Agent with a printed name, License #, and date?"
             ]
         },
         {

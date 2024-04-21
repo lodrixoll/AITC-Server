@@ -13,17 +13,79 @@ require('dotenv').config();
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
 // validate a user uploaded document with a corresponding validation document
+router.post('/validate-all', async (req, res) => {
+    console.log("\n\n==== Validating All Documents in Images Directory ====");
+
+    const imagesDirectoryPath = path.join(__dirname, '..', 'images');
+    fs.readdir(imagesDirectoryPath, async (err, files) => {
+        if (err) {
+            console.error('Could not list the directory.', err);
+            res.status(500).send('Failed to list images directory');
+            return;
+        }
+
+        let validationResults = {}; // Object to store validation results for each file
+
+        for (const file of files) {
+            try {
+                console.log(`\n\n\nExtracting title and current page for ${file}...`);
+                const extractedData = await extractTitle(file);
+                if (extractedData === null) {
+                    continue;
+                }
+
+                const extractedDataObj = JSON.parse(extractedData);
+                const title = extractedDataObj.title;
+                const currentPage = extractedDataObj.currentPage;
+                console.log("Title:", title);
+                console.log("Current Page:", currentPage);
+
+                const resultDataObj = await validate(title, currentPage, file);
+                const resultObj = JSON.parse(resultDataObj);
+                if (resultObj === null) {
+                    console.log("No validation necessary. Skipping...");
+                    continue;
+                }
+                const determination = resultObj.determination;
+                const reason = resultObj.reason;
+                const actions = resultObj.actions;
+                console.log("Determination:", determination);
+                console.log("Reason:", reason);
+                console.log("Actions:", actions);
+
+                // Store results in the validationResults object
+                validationResults[file] = {
+                    title: title,
+                    currentPage: currentPage,
+                    determination: determination,
+                    reason: reason,
+                    actions: actions
+                };
+
+            } catch (error) {
+                console.error(`Error validating document ${file}:`, error);
+                validationResults[file] = { error: error.message };
+            }
+            
+        }
+        res.status(200).json({ message: 'All documents in images directory processed.', results: validationResults });
+    });
+});
+
+// validate a user uploaded document with a corresponding validation document
 router.post('/validate', async (req, res) => {
     console.log("\n\n==== Validating Document ====");
 
     try {
-        
-        const extractedData = await extractTitle('0004.jpg');
+        console.log("Extracting title and current page...")
+        const extractedData = await extractTitle('0005.jpg');
         const extractedDataObj = JSON.parse(extractedData);
         const title = extractedDataObj.title;
         const currentPage = extractedDataObj.currentPage;
+        console.log("Title:", title);
+        console.log("Current Page:", currentPage);
 
-        const result = await validate(title, currentPage, '0004.jpg');
+        const result = await validate(title, currentPage, '0005.jpg');
 
         console.log("Document validation successful");
         res.status(200).json({ message: 'Document validation successful', title: title, result: result });
@@ -33,7 +95,7 @@ router.post('/validate', async (req, res) => {
     }
 });
 
-// Helper function to extract the title from an image file
+// Helper function to validate a document
 async function validate(title, currentPage, imageFileName) {
     try {
         // Fetch questions from the database
@@ -42,10 +104,20 @@ async function validate(title, currentPage, imageFileName) {
             throw new Error('No questions found for the given title');
         }
         const questions = questionDoc.questions.join('\n');
-        console.log("Questions:", questions);
         
         const imagePath = path.join(__dirname, '..', 'images', imageFileName);
         const base64Image = fs.readFileSync(imagePath, { encoding: 'base64' });
+
+        // Fetch document page HTML from the database by title and page number
+        const document = await Document.findOne({ documentTitle: title, type: 'user' });
+        if (!document) {
+            throw new Error('Document not found');
+        }
+        const page = document.pages.find(p => p.pageNumber === currentPage);
+        if (!page) {
+            throw new Error('Page not found in document');
+        }
+        const html = page.html;
 
         const headers = {
             "Content-Type": "application/json",
@@ -60,20 +132,43 @@ async function validate(title, currentPage, imageFileName) {
                     "content": [
                         {
                             "type": "text",
-                            "text": `Please answer the following questions about the document: 
+                            "text": `Your goal is to determine if a user provided contract is complete or not.
+                                    A document is considered complete if it meets all the requirements listed in the questions
+                                    section ONLY. That mean's you should ONLY take into consideration the answers from the questions
+                                    when making a determination of completeness. Do not factor in any external knowledge nor any
+                                    other external compliance checks. Only validate that what the user provided matches the questions. 
+                
+                                    Here are the questions that you will need to answer to make your completeness determination:
+
                                     ${questions}
-                                    Please respond with 'COMPLETE' or 'INCOMPLETE' and provide detailed reasons for your determination.`
+
+                                    For context this contract was generated using DocuSign, therefore the signatures, printed names,
+                                    and dates may not be perfectly where you expect them to be. When looking for signatures, printed names and dates
+                                    Be sure to look directly above and directly below the lines designated for signatures as sometimes docusign places 
+                                    the signatures below a given signature line. Make sure to be comprehensive in your search 
+                                    when looking for signatures, printed names and dates.
+
+                                    Further when you determine a document to be incomplete provide the exact and specific reason
+                                    that led you to that determination. Be extremely specific and mention the question that was violated and where.
+                                    Provide your response as a JSON object with the keys: determination, reason, and actions.
+                                    Do not preceed your response with the word json nor any special characters.
+
+
+                                    Here is the relevant HTML: 
+                                    
+                                    ${html}`
                         },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": `data:image/jpeg;base64,${base64Image}`
-                            }
-                        }
+                        // {
+                        //     "type": "image_url",
+                        //     "image_url": {
+                        //         "url": `data:image/jpeg;base64,${base64Image}`
+                        //     }
+                        // }
                     ]
                 },
             ],
-            "max_tokens": 300
+            "max_tokens": 300,
+            "response_format": { type: "json_object" }
         };
 
         const response = await axios.post("https://api.openai.com/v1/chat/completions", payload, { headers: headers });
@@ -121,7 +216,8 @@ async function extractTitle(imageFileName) {
                     ]
                 }
             ],
-            "max_tokens": 300
+            "max_tokens": 300,
+            "response_format": { type: "json_object" }
         };
 
         const response = await axios.post("https://api.openai.com/v1/chat/completions", payload, { headers: headers });
