@@ -18,10 +18,12 @@ router.post('/validate', async (req, res) => {
 
     try {
         
-        const title = await extractTitle('0004.jpg');
-        console.log("Title:", title);
+        const extractedData = await extractTitle('0004.jpg');
+        const extractedDataObj = JSON.parse(extractedData);
+        const title = extractedDataObj.title;
+        const currentPage = extractedDataObj.currentPage;
 
-        const result = await validate(title, '0004.jpg');
+        const result = await validate(title, currentPage, '0004.jpg');
 
         console.log("Document validation successful");
         res.status(200).json({ message: 'Document validation successful', title: title, result: result });
@@ -32,10 +34,10 @@ router.post('/validate', async (req, res) => {
 });
 
 // Helper function to extract the title from an image file
-async function validate(title, imageFileName) {
+async function validate(title, currentPage, imageFileName) {
     try {
         // Fetch questions from the database
-        const questionDoc = await Question.findOne({ title: title });
+        const questionDoc = await Question.findOne({ title: title, pageNumber: currentPage });
         if (!questionDoc) {
             throw new Error('No questions found for the given title');
         }
@@ -107,7 +109,8 @@ async function extractTitle(imageFileName) {
                                     'if the title is "FAIR HOUSING AND DISCRIMINATION ADVISORY (FHDA) PAGE 2 OF 2" the ' +
                                     'title you would respond with is "FAIR HOUSING AND DISCRIMINATION ADVISORY". ' +
                                     'Be sure to provide the title in all uppercase letters as provided in the image. ' +
-                                    'Provide your response as a JSON object with the keys: title, totalPages, and currentPage. '
+                                    'Provide your response as a JSON object with the keys: title, totalPages, and currentPage. ' +
+                                    'Do not preceed your response with the word json nor any special characters.'
                         },
                         {
                             "type": "image_url",
